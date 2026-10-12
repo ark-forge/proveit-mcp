@@ -312,6 +312,14 @@ def test_workflow_scalaires_simples_sans_deux_points():
         assert ": " not in valeur and not valeur.endswith(":"), f"ligne {numero} : scalaire à mettre entre guillemets"
 
 
+def test_workflow_installe_build_pour_test_wheel():
+    # Sans `build` installé, `pip install .` laisse un dossier build/ qui se fait passer pour le module : test_wheel
+    # ne se saute pas, il échoue (premier envoi du 12/10). Avec lui, il tourne vraiment en CI.
+    tests = _jobs(_workflow())["tests"]
+    assert re.search(r"pip install [^\n]*\bbuild==[\d.]+", tests)
+    assert re.search(r"pip install [^\n]*\bsetuptools==[\d.]+", tests)  # --no-isolation : le backend vient de l'env
+
+
 def _minors_de_requires_python():
     m = re.search(r'requires-python = ">=3\.(\d+),<3\.(\d+)"', _pyproject())
     assert m, "requires-python doit être un intervalle fermé"
