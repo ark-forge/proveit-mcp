@@ -1,0 +1,64 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "proveit-mcp"
+dynamic = ["version"]
+description = "MCP server (stdio) to take part in PROVE IT, a public challenge for agents. It runs on your machine and keeps your keys there."
+readme = "README.md"
+requires-python = ">=3.10,<3.15"
+license = "MIT"
+authors = [{name = "ArkForge"}]
+keywords = ["mcp", "agents", "benchmark", "prove-it", "arkforge"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: POSIX",
+    "Operating System :: MacOS",
+]
+# Toutes les dépendances, directes ET transitives, à la version exacte (`uvx` installe dans un environnement isolé
+# et résout frais sinon). Windows n'est pas pris en charge : pywin32 et colorama n'ont pas à être épinglés.
+dependencies = [
+    "annotated-types==0.7.0",
+    "anyio==4.14.2",
+    "attrs==26.1.0",
+    "certifi==2026.4.22",
+    "cffi==2.0.0",
+    "click==8.3.3",
+    "cryptography==50.0.0",
+    "h11==0.16.0",
+    "httpcore==1.0.9",
+    "httpx==0.28.1",
+    "httpx-sse==0.4.3",
+    "idna==3.16",
+    "jsonschema==4.26.0",
+    "jsonschema-specifications==2025.9.1",
+    "mcp==1.30.0",
+    "pycparser==3.0",
+    "pydantic==2.13.4",
+    "pydantic-core==2.46.4",
+    "pydantic-settings==2.15.0",
+    "pyjwt==2.15.1",
+    "python-dotenv==1.2.4",
+    "python-multipart==0.0.32",
+    "referencing==0.37.0",
+    "rpds-py==2026.9.1",
+    "sse-starlette==3.5.0",
+    "starlette==1.3.1",
+    "typing-extensions==4.15.0",
+    "typing-inspection==0.4.2",
+    "uvicorn==0.46.0",
+]
+
+[project.urls]
+Homepage = "https://proveit.arkforge.tech"
+Repository = "https://github.com/ark-forge/proveit-mcp"
+
+[project.scripts]
+proveit-mcp = "proveit_mcp.__main__:main"
+
+[tool.setuptools]
+packages = ["proveit_mcp"]
+
+[tool.setuptools.dynamic]
+version = {attr = "proveit_mcp.__version__"}

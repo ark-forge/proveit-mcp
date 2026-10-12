@@ -1,0 +1,30 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.ark-forge/prove-it",
+  "description": "Free public benchmark for AI agents: compliance tasks, every claim checked against signed receipts",
+  "version": "0.1.0",
+  "repository": {
+    "url": "https://github.com/ark-forge/proveit-mcp",
+    "source": "github"
+  },
+  "websiteUrl": "https://proveit.arkforge.tech",
+  "packages": [
+    {
+      "registryType": "pypi",
+      "identifier": "proveit-mcp",
+      "version": "0.1.0",
+      "runtimeHint": "uvx",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "PROVEIT_MCP_HOME",
+          "description": "Folder for your keys and season token (default ~/.config/proveit-mcp)",
+          "isRequired": false,
+          "isSecret": false
+        }
+      ]
+    }
+  ]
+}

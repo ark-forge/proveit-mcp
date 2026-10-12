@@ -1,0 +1,98 @@
+# Tests sur chaque push de `main` et sur chaque tag `v*` ; publication au registre MCP officiel sur tag seulement.
+#
+# PyPI n'est PAS publié ici : le paquet part de la machine de ArkForge entre le push de `main` (dont les tests
+# doivent être verts) et le tag, et ce workflow attend que PyPI le serve avant d'inscrire la version au registre.
+# Aucun jeton PyPI n'existe dans ce dépôt.
+name: publish
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.10', '3.11', '3.12', '3.13', '3.14']
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Version du tag = __version__ (lue par pyproject.toml) = server.json
+        run: |
+          python3 - <<'PY'
+          import json, os, re, sys
+          ref, type_ref = os.environ["GITHUB_REF_NAME"], os.environ.get("GITHUB_REF_TYPE", "tag")
+          init = re.search(r'^__version__\s*=\s*"([^"]+)"', open("proveit_mcp/__init__.py").read(), re.M).group(1)
+          assert 'version = {attr = "proveit_mcp.__version__"}' in open("pyproject.toml").read(), "pyproject.toml sans version dynamique"
+          serveur = json.load(open("server.json"))
+          versions = {"__version__": "v" + init,
+                      "server.json": "v" + serveur["version"], "server.json packages[0]": "v" + serveur["packages"][0]["version"]}
+          if type_ref == "tag":  # sur un push de main, il n'y a pas de tag à comparer
+              versions["tag"] = ref
+          print(versions)
+          if len(set(versions.values())) != 1:
+              sys.exit("versions discordantes : " + str(versions))
+          PY
+        env:
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+          GITHUB_REF_TYPE: ${{ github.ref_type }}
+      - name: Tests
+        run: |
+          python -m pip install .
+          python -m pip install pytest==9.1.1 jsonschema==4.26.0
+          python -m pytest tests
+
+  registre:
+    needs: tests
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Attendre que PyPI serve proveit-mcp (le registre vérifie le paquet et la ligne mcp-name du README)
+        run: |
+          version=$(python3 -c 'import json; print(json.load(open("server.json"))["version"])')
+          for essai in $(seq 1 60); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "https://pypi.org/pypi/proveit-mcp/${version}/json" || true)
+            if [ "$code" = "200" ]; then
+              echo "PyPI sert proveit-mcp==${version}"
+              exit 0
+            fi
+            echo "essai ${essai}/60 : PyPI répond ${code}, nouvel essai dans 10 s"
+            sleep 10
+          done
+          echo "PyPI ne sert pas proveit-mcp==${version} après 10 minutes" >&2
+          exit 1
+      - name: mcp-publisher v1.8.1, épinglé par version et par sha256
+        run: |
+          curl -fsSL -o mcp-publisher.tar.gz https://github.com/modelcontextprotocol/registry/releases/download/v1.8.1/mcp-publisher_linux_amd64.tar.gz
+          echo "a06c9096dcb9727c13555b6be26c7effa707b01f06a4c561ba7a3635443cf2cc  mcp-publisher.tar.gz" | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/bin"
+          tar -xzf mcp-publisher.tar.gz -C "$RUNNER_TEMP/bin" mcp-publisher
+          rm mcp-publisher.tar.gz
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+      - name: Connexion au registre (OIDC GitHub)
+        run: mcp-publisher login github-oidc
+      - name: Publication (un doublon est un succès : le tag peut être rejoué)
+        run: |
+          output=$(mcp-publisher publish 2>&1) && code=0 || code=$?
+          echo "$output"
+          if [ "$code" -eq 0 ]; then
+            echo "publié"
+          elif echo "$output" | grep -qiE "already exists|duplicate|already published|conflict"; then
+            echo "déjà publié : rien à faire"
+          else
+            echo "échec de la publication au registre" >&2
+            exit 1
+          fi
