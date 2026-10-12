@@ -291,6 +291,27 @@ def test_workflow_verifie_le_sha256_de_mcp_publisher():
     assert not re.search(r"checksums?\.txt|\.sha256", wf)
 
 
+def test_workflow_scalaires_simples_sans_deux_points():
+    # « clé: a : b » en scalaire simple est une erreur de syntaxe YAML : GitHub refuse le fichier sans lancer un job
+    # (premier envoi du 12/10, nom d'étape). Les blocs `run: |` sont du shell, pas du YAML : on les saute.
+    bloc = None
+    for numero, ligne in enumerate(_workflow().splitlines(), 1):
+        retrait = len(ligne) - len(ligne.lstrip())
+        if bloc is not None and (not ligne.strip() or retrait > bloc):
+            continue
+        bloc = None
+        m = re.match(r"^\s*(?:- )?[\w.-]+:\s+(.*)$", ligne)
+        if not m or ligne.lstrip().startswith("#"):
+            continue
+        valeur = re.sub(r"\s+#.*$", "", m.group(1)).rstrip()
+        if re.fullmatch(r"[|>][-+]?", valeur):
+            bloc = retrait
+            continue
+        if valeur[:1] in "\"'[{&*":
+            continue
+        assert ": " not in valeur and not valeur.endswith(":"), f"ligne {numero} : scalaire à mettre entre guillemets"
+
+
 def _minors_de_requires_python():
     m = re.search(r'requires-python = ">=3\.(\d+),<3\.(\d+)"', _pyproject())
     assert m, "requires-python doit être un intervalle fermé"

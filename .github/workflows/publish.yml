@@ -84,7 +84,7 @@ jobs:
           echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
       - name: Connexion au registre (OIDC GitHub)
         run: mcp-publisher login github-oidc
-      - name: Publication (un doublon est un succès : le tag peut être rejoué)
+      - name: "Publication (un doublon est un succès : le tag peut être rejoué)"
         run: |
           output=$(mcp-publisher publish 2>&1) && code=0 || code=$?
           echo "$output"
