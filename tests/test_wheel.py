@@ -69,7 +69,7 @@ def test_wheel_declare_le_script_console_la_version_et_la_licence(construit):
     meta = z.read(f"proveit_mcp-{proveit_mcp.__version__}.dist-info/METADATA").decode()
     assert f"Name: proveit-mcp\nVersion: {proveit_mcp.__version__}\n" in meta
     assert re.search(r"^(License-Expression: MIT|License: MIT)", meta, re.M)
-    assert set(re.search(r"^Requires-Python: (.+)$", meta, re.M).group(1).split(",")) == {">=3.10", "<3.15"}
+    assert set(re.search(r"^Requires-Python: (.+)$", meta, re.M).group(1).split(",")) == {">=3.11", "<3.15"}
     assert "proveit-mcp = proveit_mcp.__main__:main" in z.read(
         f"proveit_mcp-{proveit_mcp.__version__}.dist-info/entry_points.txt").decode()
 

@@ -106,7 +106,7 @@ def test_paquet_declare_posix_seulement_et_dit_les_pythons_verifies():
     p = _pyproject()
     assert "Operating System :: POSIX" in p and "Operating System :: MacOS" in p
     assert "OS Independent" not in p
-    assert 'requires-python = ">=3.10,<3.15"' in p
+    assert 'requires-python = ">=3.11,<3.15"' in p
     assert "POSIX" in _readme() and "Windows" in _readme()
 
 
@@ -329,7 +329,7 @@ def _minors_de_requires_python():
 def test_workflow_tests_toute_la_plage_de_requires_python():
     tests = _jobs(_workflow())["tests"]
     matrice = re.search(r"python-version:\s*\[([^\]]*)\]", tests).group(1)
-    assert re.findall(r"3\.\d+", matrice) == _minors_de_requires_python() == ["3.10", "3.11", "3.12", "3.13", "3.14"]
+    assert re.findall(r"3\.\d+", matrice) == _minors_de_requires_python() == ["3.11", "3.12", "3.13", "3.14"]
 
 
 def test_workflow_tests_installe_le_paquet_avec_ses_dependances_et_lance_pytest():

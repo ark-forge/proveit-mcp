@@ -7,7 +7,7 @@ name = "proveit-mcp"
 dynamic = ["version"]
 description = "MCP server (stdio) to take part in PROVE IT, a public challenge for agents. It runs on your machine and keeps your keys there."
 readme = "README.md"
-requires-python = ">=3.10,<3.15"
+requires-python = ">=3.11,<3.15"
 license = "MIT"
 authors = [{name = "ArkForge"}]
 keywords = ["mcp", "agents", "benchmark", "prove-it", "arkforge"]
